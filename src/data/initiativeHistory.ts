@@ -7,6 +7,7 @@
 import {
   collection,
   doc,
+  getDocs,
   runTransaction,
   serverTimestamp,
   type DocumentData,
@@ -175,8 +176,7 @@ export async function archiveInitiative(
       kind: 'archive' as InitiativeMutationKind,
       actor: actor(),
       changedAt: serverTimestamp(),
-      changedAtClient,
-      changedAtClient,
+      changedAtClient: new Date().toISOString(),
       changes: currentChanges,
       before: current,
       after: archived,
@@ -209,6 +209,7 @@ export async function restoreInitiative(
       kind: 'restore' as InitiativeMutationKind,
       actor: actor(),
       changedAt: serverTimestamp(),
+      changedAtClient: new Date().toISOString(),
       changes: buildChanges(current, next),
       before: current,
       after: next,
@@ -224,9 +225,7 @@ export async function restoreInitiative(
 
 export async function loadInitiativeHistory(initiativeId: string): Promise<Array<Record<string, unknown>>> {
   if (!db) throw new Error('Firestore is not initialized.');
-  const snapshot = await import('firebase/firestore').then(({ getDocs }) =>
-    getDocs(collection(doc(db, INITIATIVES_COLLECTION, initiativeId), HISTORY_COLLECTION))
-  );
+  const snapshot = await getDocs(collection(doc(db, INITIATIVES_COLLECTION, initiativeId), HISTORY_COLLECTION));
   return snapshot.docs
     .map(item => item.data() as Record<string, unknown>)
     .sort((a, b) => String(a.changedAtClient ?? '').localeCompare(String(b.changedAtClient ?? '')));
