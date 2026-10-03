@@ -1,147 +1,200 @@
 /**
  * Data Repository Layer
- * Manages Reading, Writing, Querying, and Persistence for the Initiatives Dataset.
+ * Firestore is the authoritative source of initiative records.
+ * LocalStorage/IndexedDB remain a temporary offline/preview cache only.
  */
 
 import { Initiative } from '../types';
 import { generatedInitiatives } from './generated/initiatives725';
 import { canonicalizeInitiativeRecord } from './normalizeInitiative';
 import { safeLocalStorage, getFromIndexedDB, saveToIndexedDB } from '../utils/safeStorage';
+import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
+import { db } from '../utils/firebaseAuth';
 
 const STORAGE_KEY = 'cooperative_initiatives_data';
 const VERSION_KEY = 'cooperative_initiatives_version';
 const CURRENT_DATA_VERSION = '2026.09.26.725.final';
+const FIRESTORE_COLLECTION = 'cooperative_initiatives';
+const FIRESTORE_BOOTSTRAP_MARKER = 'cooperative_settings/firestore_bootstrap';
 
 let inMemoryCache: Initiative[] | null = null;
+let bootstrapPromise: Promise<Initiative[]> | null = null;
 
-/**
- * Synchronously retrieves initial initiatives from memory, localStorage, or canonical 725 dataset.
- */
-export function getInitialInitiatives(): Initiative[] {
-  if (inMemoryCache && inMemoryCache.length > 0) {
-    return inMemoryCache;
-  }
+function canonicalizeList(items: any[]): Initiative[] {
+  return items.map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
+}
 
+function cacheInitiatives(list: Initiative[]): Initiative[] {
+  inMemoryCache = canonicalizeList(list);
   try {
-    const raw = safeLocalStorage.getItem(STORAGE_KEY);
-    const storedVer = safeLocalStorage.getItem(VERSION_KEY);
-
-    if (raw && storedVer === CURRENT_DATA_VERSION) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        inMemoryCache = parsed.map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
-        return inMemoryCache;
-      }
-    }
-  } catch (e) {
-    console.warn('[Repository] Failed to read cached initiatives from storage, falling back to SSOT:', e);
-  }
-
-  inMemoryCache = generatedInitiatives.map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
-  
-  // Persist canonical data with current version
-  try {
-    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(inMemoryCache));
+    const serialized = JSON.stringify(inMemoryCache);
+    safeLocalStorage.setItem(STORAGE_KEY, serialized);
     safeLocalStorage.setItem(VERSION_KEY, CURRENT_DATA_VERSION);
+    saveToIndexedDB(STORAGE_KEY, serialized).catch(() => {});
   } catch (e) {
-    console.warn('[Repository] Initial cache write error:', e);
+    console.warn('[Repository] Cache write notice:', e);
   }
-
   return inMemoryCache;
 }
 
+function getCachedInitiatives(): Initiative[] {
+  if (inMemoryCache && inMemoryCache.length > 0) return inMemoryCache;
+  try {
+    const raw = safeLocalStorage.getItem(STORAGE_KEY);
+    const storedVer = safeLocalStorage.getItem(VERSION_KEY);
+    if (raw && storedVer === CURRENT_DATA_VERSION) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return cacheInitiatives(parsed);
+    }
+  } catch (e) {
+    console.warn('[Repository] Local cache read notice:', e);
+  }
+  return [];
+}
+
 /**
- * Asynchronously loads initiatives, with IndexedDB check if localStorage is missing or stale.
+ * Synchronous bootstrap for the first React render.
+ * It deliberately does not claim that local data is authoritative.
+ */
+export function getInitialInitiatives(): Initiative[] {
+  const cached = getCachedInitiatives();
+  if (cached.length > 0) return cached;
+  return cacheInitiatives(generatedInitiatives);
+}
+
+/**
+ * Loads initiatives from Firestore first. If Firestore is unavailable or empty,
+ * the canonical 725 dataset is used as a safe local fallback.
  */
 export async function loadInitiativesAsync(): Promise<Initiative[]> {
-  const syncData = getInitialInitiatives();
-  if (syncData.length >= 725) {
-    return syncData;
+  if (db) {
+    try {
+      const snapshot = await getDocs(collection(db, FIRESTORE_COLLECTION));
+      if (!snapshot.empty) {
+        const remote = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+        return cacheInitiatives(remote);
+      }
+    } catch (e) {
+      console.warn('[Repository] Firestore read failed; using local fallback:', e);
+    }
   }
+
+  const cached = getCachedInitiatives();
+  if (cached.length > 0) return cached;
 
   try {
     const idbData = await getFromIndexedDB<string>(STORAGE_KEY);
     if (idbData && typeof idbData === 'string') {
       const parsed = JSON.parse(idbData);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        inMemoryCache = parsed.map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
-        return inMemoryCache;
-      }
+      if (Array.isArray(parsed) && parsed.length > 0) return cacheInitiatives(parsed);
     }
   } catch (e) {
-    console.warn('[Repository] IndexedDB read error:', e);
+    console.warn('[Repository] IndexedDB read notice:', e);
   }
 
-  return syncData;
+  return cacheInitiatives(generatedInitiatives);
 }
 
 /**
- * Atomically saves full initiatives array to memory, localStorage, and IndexedDB.
+ * Seeds Firestore once from the canonical 725 dataset when explicitly called
+ * by an authenticated central administrator. Existing Firestore data is never
+ * overwritten by this bootstrap.
  */
+export async function bootstrapFirestoreFromCanonicalDataset(): Promise<Initiative[]> {
+  if (!db) throw new Error('Firestore is not initialized.');
+  if (bootstrapPromise) return bootstrapPromise;
+
+  bootstrapPromise = (async () => {
+    const markerRef = doc(db, FIRESTORE_BOOTSTRAP_MARKER);
+    const marker = await getDoc(markerRef).catch(() => null);
+
+    const existing = await getDocs(collection(db, FIRESTORE_COLLECTION));
+    if (!existing.empty || marker?.exists()) {
+      const loaded = await loadInitiativesAsync();
+      return loaded;
+    }
+
+    const canonical = canonicalizeList(generatedInitiatives);
+    const chunkSize = 450;
+
+    for (let start = 0; start < canonical.length; start += chunkSize) {
+      const batch = writeBatch(db);
+      const chunk = canonical.slice(start, start + chunkSize);
+      for (const initiative of chunk) {
+        const initiativeId = String(initiative.id || initiative.initiativeNumber);
+        batch.set(doc(db, FIRESTORE_COLLECTION, initiativeId), initiative);
+      }
+      await batch.commit();
+    }
+
+    await setDoc(markerRef, {
+      status: 'completed',
+      datasetVersion: CURRENT_DATA_VERSION,
+      initiativeCount: canonical.length,
+      createdAt: new Date().toISOString()
+    });
+
+    return cacheInitiatives(canonical);
+  })();
+
+  try {
+    return await bootstrapPromise;
+  } finally {
+    bootstrapPromise = null;
+  }
+}
+
+/** Saves a single initiative to Firestore and refreshes the local cache. */
+export async function saveInitiativeRecordRemote(record: Initiative): Promise<Initiative> {
+  if (!db) throw new Error('Firestore is not initialized.');
+  const canonical = canonicalizeInitiativeRecord(record);
+  const initiativeId = String(canonical.id || canonical.initiativeNumber);
+  await setDoc(doc(db, FIRESTORE_COLLECTION, initiativeId), canonical, { merge: true });
+  cacheInitiatives([
+    ...(getCachedInitiatives().filter(i => i.id !== canonical.id && i. initiativeNumber !== canonical.initiativeNumber)),
+    canonical
+  ]);
+  return canonical;
+}
+
+/** Deletes an initiative from Firestore and refreshes the local cache. */
+export async function deleteInitiativeRecordRemote(id: string): Promise<void> {
+  if (!db) throw new Error('Firestore is not initialized.');
+  await deleteDoc(doc(db, FIRESTORE_COLLECTION, id));
+  cacheInitiatives(getCachedInitiatives().filter(i => i.id !== id));
+}
+
+/** Legacy synchronous cache save retained for offline/import workflows. */
 export function saveAllInitiatives(initiatives: Initiative[]): void {
-  const canonicalList = initiatives.map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
-  inMemoryCache = canonicalList;
-  const serialized = JSON.stringify(canonicalList);
-  safeLocalStorage.setItem(STORAGE_KEY, serialized);
-  safeLocalStorage.setItem(VERSION_KEY, CURRENT_DATA_VERSION);
-  saveToIndexedDB(STORAGE_KEY, serialized).catch(() => {});
+  cacheInitiatives(initiatives);
 }
 
-/**
- * Updates or inserts a single initiative record.
- */
 export function saveInitiativeRecord(record: Initiative): Initiative[] {
-  const current = getInitialInitiatives();
+  const current = getCachedInitiatives();
   const canonical = canonicalizeInitiativeRecord(record);
   const index = current.findIndex(i => i.id === canonical.id || i.initiativeNumber === canonical.initiativeNumber);
-
-  let updated: Initiative[];
-  if (index >= 0) {
-    updated = [...current];
-    updated[index] = { ...updated[index], ...canonical, updatedAt: new Date().toISOString() };
-  } else {
-    updated = [canonical, ...current];
-  }
-
-  saveAllInitiatives(updated);
+  const updated = index >= 0
+    ? current.map((item, idx) => idx === index ? { ...item, ...canonical, updatedAt: new Date().toISOString() } : item)
+    : [canonical, ...current];
+  cacheInitiatives(updated);
   return updated;
 }
 
-/**
- * Deletes an initiative by ID.
- */
 export function deleteInitiativeRecord(id: string): Initiative[] {
-  const current = getInitialInitiatives();
-  const updated = current.filter(i => i.id !== id);
-  saveAllInitiatives(updated);
+  const updated = getCachedInitiatives().filter(i => i.id !== id);
+  cacheInitiatives(updated);
   return updated;
 }
 
-/**
- * Resets local data back to the canonical 725 Master Dataset.
- */
 export function resetToCanonicalDataset(): Initiative[] {
-  inMemoryCache = generatedInitiatives.map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
-  saveAllInitiatives(inMemoryCache);
-  return inMemoryCache;
+  return cacheInitiatives(generatedInitiatives);
 }
 
-/**
- * Finds an initiative by its unique ID.
- */
 export function findInitiativeById(id: string): Initiative | undefined {
-  const all = getInitialInitiatives();
-  return all.find(i => i.id === id || i.initiativeNumber === id);
+  return getInitialInitiatives().find(i => i.id === id || i.initiativeNumber === id);
 }
 
-/**
- * Filters initiatives by query criteria.
- */
-export function queryInitiatives(filter: {
-  district?: string;
-  status?: string;
-  searchQuery?: string;
-}): Initiative[] {
+export function queryInitiatives(filter: { district?: string; status?: string; searchQuery?: string; }): Initiative[] {
   let list = getInitialInitiatives();
 
   if (filter.district && filter.district !== 'all' && filter.district !== 'جميع مديريات المحافظة') {
