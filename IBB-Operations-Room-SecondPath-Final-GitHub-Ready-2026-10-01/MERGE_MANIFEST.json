@@ -1,0 +1,61 @@
+{
+  "strategy": "preserve-host-project-and-merge-v10",
+  "host_is_master": true,
+  "do_not_replace": [
+    "src/App.tsx",
+    "src/main.tsx",
+    "src/index.css",
+    "src/data.ts",
+    "src/types.ts",
+    "src/permissions.ts",
+    "package.json",
+    "vite.config.*",
+    "firebase configuration",
+    "metadata.json"
+  ],
+  "integrate_as_home": "src/components/OperationsRoom.tsx",
+  "required_navigation": [
+    "OperationsRoom",
+    "AdaptiveNavigation",
+    "GlobalSearch"
+  ],
+  "required_data_layers": [
+    "official road network",
+    "survey tracks",
+    "district boundaries",
+    "data trust",
+    "decision trace"
+  ],
+  "security_preserve": [
+    "Firebase Authentication",
+    "Firestore rules",
+    "RBAC",
+    "role resolution",
+    "data scope"
+  ],
+  "decision_preserve": [
+    "UnifiedDecisionEngine",
+    "decisionTrace",
+    "decisionConfidence",
+    "DecisionValidationGuard"
+  ],
+  "acceptance_checks": [
+    "build passes",
+    "no duplicate React roots",
+    "no broken imports",
+    "original portals still reachable",
+    "OperationsRoom opens after authentication",
+    "RBAC denies unauthorized actions",
+    "map loads",
+    "route layers load",
+    "data trust is visible",
+    "decision source is traceable"
+  ],
+  "material_ledgers": {
+    "source": "شطب اسمنت وديزل بحسب المديرية الاخيير قابل للاضافة.xlsx",
+    "transactions": 1472,
+    "linked": 1223,
+    "unlinked_or_stock": 249,
+    "architecture": "separate transaction ledger linked to canonical initiatives"
+  }
+}

@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import { readFileSync } from 'node:fs';
+const p='src/data/materialLedgers.ts';
+const s=readFileSync(p,'utf8');
+if(!s.includes('materialLedgerTransactions')) throw new Error('material ledger missing');
+const start=s.indexOf(' = [')+3, end=s.indexOf(';\nexport const materialLedgerSummary');
+const rows=JSON.parse(s.slice(start,end));
+const linked=rows.filter(r=>r.initiativeId);
+const bad=linked.filter(r=>!['exact','fuzzy'].includes(r.matchMethod));
+if(bad.length) throw new Error('linked rows with invalid match method');
+console.log(`Material ledger validation passed: ${rows.length} transactions, ${linked.length} linked, ${rows.length-linked.length} unlinked/stock.`);

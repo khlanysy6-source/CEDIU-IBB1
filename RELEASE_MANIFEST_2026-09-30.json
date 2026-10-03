@@ -1,0 +1,15 @@
+{
+  "release": "IBB Operations Room — Second Executive Pathway",
+  "version": "2026-09-30.final-integrated",
+  "canonicalInitiatives": 725,
+  "secondPathSortingMatches": 725,
+  "evaluationCodeMatches": 711,
+  "syntheticRecords": 0,
+  "excPreserved": true,
+  "legacySyntheticGeneratorRemoved": true,
+  "hostFileCount": 251,
+  "secondPathFilesMerged": 5,
+  "finalSourceFileCountBeforePackaging": 259,
+  "buildVerified": false,
+  "buildVerificationReason": "npm dependency tree was unavailable in the sandbox; no successful production build was claimed."
+}
