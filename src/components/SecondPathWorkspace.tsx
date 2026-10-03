@@ -67,17 +67,7 @@ export default function SecondPathWorkspace({ initiatives, selectedInitiative, a
 
     <div className="second-analytics">
       <div className="second-section-title"><div><BarChart3 size={18}/><h2>طبقة الذكاء بعد المسار</h2></div><span>لا تُنتج التحليلات قراراً إلا من بيانات المسار الموثقة</span></div>
-      <div className="analytics-grid">{(ANALYTICS_AFTER_PATHWAY as any[]).map((item, i) => {
-        const title = typeof item === 'string' ? item : item.title || item.name || '';
-        const key = typeof item === 'string' ? `analytics-${i}-${item}` : `analytics-${item.id || i}`;
-        return (
-          <button key={key} onClick={()=>onNavigate(['interactive_charts','interactive_map','district_portal','interactive_charts','advisor','decision_center'][i] as any)}>
-            <b>{i+1}</b>
-            <span>{title}</span>
-            <ArrowLeft size={14}/>
-          </button>
-        );
-      })}</div>
+      <div className="analytics-grid">{ANALYTICS_AFTER_PATHWAY.map((item,i)=><button key={item} onClick={()=>onNavigate(['interactive_charts','interactive_map','district_portal','interactive_charts','advisor','decision_center'][i])}><b>{i+1}</b><span>{item}</span><ArrowLeft size={14}/></button>)}</div>
       <div className="status-strip"><span><CheckCircle2/> مكتمل: {totals.status.completed||0}</span><span><Truck/> قيد التنفيذ: {totals.status.ongoing||0}</span><span><AlertTriangle/> متعثر: {totals.status.stagnant||0}</span><span><XCircle/> متوقف: {totals.status.stopped||0}</span><span><ClipboardList/> لم يبدأ: {totals.status.pending||0}</span></div>
     </div>
   </section>;
