@@ -13,7 +13,7 @@ import {
 import { Initiative, UserRole, Knight } from './types';
 import { TabId, ROLE_TAB_ACCESS, TAB_LABELS } from './permissions';
 import { useAuth } from './security/AuthContext';
-import { getInitialInitiatives, loadInitiativesAsync } from './data/repository';
+import { getInitialInitiatives, loadInitiativesAsync, bootstrapFirestoreFromCanonicalDataset, saveInitiativeRecordRemote, deleteInitiativeRecordRemote } from './data/repository';
 import { safeLocalStorage } from './utils/safeStorage';
 
 // Component imports
@@ -89,6 +89,28 @@ export default function App() {
   const [isApkGuideOpen, setIsApkGuideOpen] = useState(false);
   const [isChangelogOpen, setIsChangelogOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
+
+  // Firestore is the authoritative initiative source. The first authenticated
+  // central administrator bootstraps the canonical 725 records only when the
+  // new Firestore collection is genuinely empty.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const remote = await loadInitiativesAsync();
+        if (!cancelled && remote.length > 0) setInitiatives(remote);
+
+        const isCentral = ['admin', 'central_unit'].includes(effectiveRole);
+        if (!cancelled && !isDemoMode && isCentral && currentUser) {
+          const seeded = await bootstrapFirestoreFromCanonicalDataset();
+          if (!cancelled && seeded.length > 0) setInitiatives(seeded);
+        }
+      } catch (e) {
+        console.warn('[App] Firestore initialization notice:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [currentUser?.uid, isDemoMode, effectiveRole]);
 
   // Sync knights changes to storage
   useEffect(() => {
