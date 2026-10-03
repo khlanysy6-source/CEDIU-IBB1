@@ -9,7 +9,6 @@ import {
   doc,
   runTransaction,
   serverTimestamp,
-  setDoc,
   type DocumentData,
 } from 'firebase/firestore';
 import { auth, db } from '../utils/firebaseAuth';
@@ -149,12 +148,11 @@ export async function writeInitiativeMutation(
 }
 
 export async function archiveInitiative(
-  initiativeId: string,
-  before: Initiative | null
+  initiativeId: string
 ): Promise<void> {
   if (!db) throw new Error('Firestore is not initialized.');
   const ref = doc(db, INITIATIVES_COLLECTION, initiativeId);
-  const currentSnap = await runTransaction(db, async transaction => {
+  await runTransaction(db, async transaction => {
     const snap = await transaction.get(ref);
     if (!snap.exists()) return null;
     const current = cleanForFirestore(snap.data()) as Initiative;
@@ -184,8 +182,6 @@ export async function archiveInitiative(
     transaction.set(auditRef, event);
     return archived;
   });
-  void before;
-  void currentSnap;
 }
 
 export async function restoreInitiative(
