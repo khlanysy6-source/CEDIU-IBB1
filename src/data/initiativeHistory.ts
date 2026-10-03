@@ -115,6 +115,7 @@ export async function writeInitiativeMutation(
   );
   const auditRef = doc(db, AUDIT_COLLECTION, eventId);
   const user = actor();
+  const changedAtClient = new Date().toISOString();
   const event = {
     eventId,
     initiativeId,
@@ -122,6 +123,7 @@ export async function writeInitiativeMutation(
     kind,
     actor: user,
     changedAt: serverTimestamp(),
+    changedAtClient,
     changes,
     before: beforeClean,
     after,
@@ -173,6 +175,8 @@ export async function archiveInitiative(
       kind: 'archive' as InitiativeMutationKind,
       actor: actor(),
       changedAt: serverTimestamp(),
+      changedAtClient,
+      changedAtClient,
       changes: currentChanges,
       before: current,
       after: archived,
@@ -215,4 +219,32 @@ export async function restoreInitiative(
     restored = next as Initiative;
   });
   return restored;
+}
+
+
+export async function loadInitiativeHistory(initiativeId: string): Promise<Array<Record<string, unknown>>> {
+  if (!db) throw new Error('Firestore is not initialized.');
+  const snapshot = await import('firebase/firestore').then(({ getDocs }) =>
+    getDocs(collection(doc(db, INITIATIVES_COLLECTION, initiativeId), HISTORY_COLLECTION))
+  );
+  return snapshot.docs
+    .map(item => item.data() as Record<string, unknown>)
+    .sort((a, b) => String(a.changedAtClient ?? '').localeCompare(String(b.changedAtClient ?? '')));
+}
+
+export async function getInitiativeSnapshotAt(
+  initiativeId: string,
+  at: Date
+): Promise<Initiative | null> {
+  const history = await loadInitiativeHistory(initiativeId);
+  const cutoff = at.toISOString();
+  let snapshot: Initiative | null = null;
+  for (const event of history) {
+    const changedAt = String(event.changedAtClient ?? '');
+    if (changedAt && changedAt <= cutoff) {
+      const after = event.after;
+      if (after && typeof after === 'object') snapshot = after as Initiative;
+    }
+  }
+  return snapshot;
 }
