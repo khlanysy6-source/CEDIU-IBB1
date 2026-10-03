@@ -72,7 +72,9 @@ export async function loadInitiativesAsync(): Promise<Initiative[]> {
     try {
       const snapshot = await getDocs(collection(db, FIRESTORE_COLLECTION));
       if (!snapshot.empty) {
-        const remote = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+        const remote = snapshot.docs
+          .filter(d => !(d.data() as { isArchived?: boolean }).isArchived)
+          .map(d => ({ ...d.data(), id: d.id }));
         return cacheInitiatives(remote);
       }
     } catch (e) {
