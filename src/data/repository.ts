@@ -161,8 +161,7 @@ export async function saveInitiativeRecordRemote(record: Initiative, kind: 'crea
 /** Archives an initiative instead of physically deleting it; history remains recoverable. */
 export async function deleteInitiativeRecordRemote(id: string): Promise<void> {
   if (!db) throw new Error('Firestore is not initialized.');
-  const current = getCachedInitiatives().find(i => i.id === id);
-  await archiveInitiative(id, current ?? null);
+  await archiveInitiative(id);
   cacheInitiatives(getCachedInitiatives().filter(i => i.id !== id));
 }
 
