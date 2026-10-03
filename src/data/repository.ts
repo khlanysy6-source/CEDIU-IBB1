@@ -146,11 +146,11 @@ export async function bootstrapFirestoreFromCanonicalDataset(): Promise<Initiati
 }
 
 /** Saves a single initiative to Firestore and refreshes the local cache. */
-export async function saveInitiativeRecordRemote(record: Initiative): Promise<Initiative> {
+export async function saveInitiativeRecordRemote(record: Initiative, kind: 'create' | 'update' = 'update'): Promise<Initiative> {
   if (!db) throw new Error('Firestore is not initialized.');
   const canonical = canonicalizeInitiativeRecord(record);
   const initiativeId = String(canonical.id || canonical.initiativeNumber);
-  await writeInitiativeMutation(canonical, 'update');
+  await writeInitiativeMutation(canonical, kind);
   cacheInitiatives([
     ...(getCachedInitiatives().filter(i => i.id !== canonical.id && i.initiativeNumber !== canonical.initiativeNumber)),
     canonical
