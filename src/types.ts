@@ -77,9 +77,7 @@ export interface FieldReport {
 
 export interface TechnicalWorkQuantities {
   avgWidth?: number; // متوسط العرض (م)
-  width?: number; // العرض (م)
   lengthCompleted?: number; // الطول (م)
-  length?: number; // الطول
   excavationCut?: number; // الشق
   expansion?: number; // التوسعة
   expansionEarth?: number;
@@ -103,7 +101,7 @@ export interface TechnicalWorkQuantities {
   blockWalls?: number; // جدران كتلية
   stoneMasonry?: number; // مباني حجر
   stonePaving?: number; // رصف حجري
-  [key: string]: any;
+  concretePaving?: number; // رصف خرساني
 }
 
 export type InitiativeLifecycleStage = 

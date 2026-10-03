@@ -40,17 +40,7 @@ const ITEMS: Record<TabId, NavItem> = {
   forms_portal: { tab: 'forms_portal', label: 'النماذج والمعاملات', short: 'النماذج', icon: FileText, description: 'النماذج الأصلية المرتبطة بسجل المبادرة' },
 };
 
-const FLOW: NavItem[] = (() => {
-  const seen = new Set<TabId>();
-  const items: NavItem[] = [];
-  for (const item of OPERATING_FLOW) {
-    if (!seen.has(item.tab) && ITEMS[item.tab]) {
-      seen.add(item.tab);
-      items.push({ ...ITEMS[item.tab], description: item.purpose });
-    }
-  }
-  return items;
-})();
+const FLOW: NavItem[] = OPERATING_FLOW.map(item => ({ ...ITEMS[item.tab], description: item.purpose }));
 
 export default function AdaptiveNavigation({ userRole, activeTab, initiativesCount, roleConfig, onNavigate, onOpenSettings, onOpenGuide, onOpenSearch }: Props) {
   const allowed = useMemo(() => new Set((Object.keys(ITEMS) as TabId[]).filter(tab => hasTabAccess(userRole, tab, roleConfig))), [userRole, roleConfig]);
@@ -66,15 +56,7 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
   const nearby = useMemo(() => {
     const idx = FLOW.findIndex(x => x.tab === activeTab);
     const candidates = idx >= 0 ? [...FLOW.slice(Math.max(0, idx - 1), idx), ...FLOW.slice(idx + 1, idx + 3)] : FLOW;
-    const uniqueCandidates: NavItem[] = [];
-    const seen = new Set<TabId>([activeTab]);
-    for (const item of candidates) {
-      if (item && item.tab && !seen.has(item.tab) && allowed.has(item.tab)) {
-        seen.add(item.tab);
-        uniqueCandidates.push(item);
-      }
-    }
-    return uniqueCandidates.slice(0, 2);
+    return candidates.filter(x => allowed.has(x.tab)).slice(0, 2);
   }, [activeTab, allowed]);
 
   const go = (tab: TabId) => { if (allowed.has(tab)) onNavigate(tab); };
@@ -125,7 +107,7 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
         {primary.map(item => {
           const ItemIcon = item.icon;
           const active = activeTab === item.tab;
-          return <button key={`primary-${item.tab}`} onClick={() => go(item.tab)} aria-current={active ? 'page' : undefined} className={`adaptive-nav__item ${active ? 'is-active' : ''}`}>
+          return <button key={item.tab} onClick={() => go(item.tab)} aria-current={active ? 'page' : undefined} className={`adaptive-nav__item ${active ? 'is-active' : ''}`}>
             <ItemIcon size={17}/><span>{item.tab === 'initiatives' ? `${item.short} (${initiativesCount})` : item.short}</span>
           </button>;
         })}
@@ -138,7 +120,7 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
             {([...FLOW, ...ADMIN_PORTALS.map(item => ({...ITEMS[item.tab], description:item.purpose}))]
               .filter((item, index, arr) => allowed.has(item.tab) && !primary.some(p => p.tab === item.tab) && arr.findIndex(x => x.tab === item.tab) === index)
               .sort((a,b) => a.tab === 'home' ? -1 : b.tab === 'home' ? 1 : a.label.localeCompare(b.label,'ar'))
-              .map(item => { const ItemIcon = item.icon; return <button key={`panel-${item.tab}`} role="menuitem" onClick={() => navigate(item.tab)}><ItemIcon size={16}/><span><b>{item.label}</b><small>{item.description}</small></span></button>; }))}
+              .map(item => { const ItemIcon = item.icon; return <button key={item.tab} role="menuitem" onClick={() => navigate(item.tab)}><ItemIcon size={16}/><span><b>{item.label}</b><small>{item.description}</small></span></button>; }))}
           </div>}
         </div>
       </div>
@@ -146,7 +128,7 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
       {nearby.length > 0 && activeTab !== 'home' && (
         <div className="adaptive-nav__next" aria-label="خطوات مقترحة">
           <span>الخطوة التالية المقترحة:</span>
-          {nearby.map(item => <button key={`nearby-${item.tab}`} onClick={() => go(item.tab)}>{item.label}<ArrowRight size={14}/></button>)}
+          {nearby.map(item => <button key={item.tab} onClick={() => go(item.tab)}>{item.label}<ArrowRight size={14}/></button>)}
         </div>
       )}
     </section>

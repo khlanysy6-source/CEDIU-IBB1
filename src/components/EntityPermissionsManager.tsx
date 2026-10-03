@@ -640,6 +640,3 @@ export const EntityPermissionsManager: React.FC<EntityPermissionsManagerProps> =
     </div>
   );
 };
-
-export default EntityPermissionsManager;
-
