@@ -13,7 +13,7 @@ import {
 import { Initiative, UserRole, Knight } from './types';
 import { TabId, ROLE_TAB_ACCESS, TAB_LABELS } from './permissions';
 import { useAuth } from './security/AuthContext';
-import { getInitialInitiatives, loadInitiativesAsync, bootstrapFirestoreFromCanonicalDataset, saveInitiativeRecordRemote, deleteInitiativeRecordRemote } from './data/repository';
+import { getInitialInitiatives, loadInitiativesAsync, saveInitiativeRecordRemote, deleteInitiativeRecordRemote } from './data/repository';
 import { safeLocalStorage } from './utils/safeStorage';
 
 // Component imports
@@ -90,27 +90,21 @@ export default function App() {
   const [isChangelogOpen, setIsChangelogOpen] = useState(false);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
 
-  // Firestore is the authoritative initiative source. The first authenticated
-  // central administrator bootstraps the canonical 725 records only when the
-  // new Firestore collection is genuinely empty.
+  // Firestore is the authoritative runtime source. Excel matrices, studies,
+  // and historical ledgers are foundation/import sources only and are not
+  // mutated by runtime workflows.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         const remote = await loadInitiativesAsync();
         if (!cancelled && remote.length > 0) setInitiatives(remote);
-
-        const isCentral = ['admin', 'central_unit'].includes(effectiveRole);
-        if (!cancelled && !isDemoMode && isCentral && currentUser) {
-          const seeded = await bootstrapFirestoreFromCanonicalDataset();
-          if (!cancelled && seeded.length > 0) setInitiatives(seeded);
-        }
       } catch (e) {
         console.warn('[App] Firestore initialization notice:', e);
       }
     })();
     return () => { cancelled = true; };
-  }, [currentUser?.uid, isDemoMode, effectiveRole]);
+  }, [currentUser?.uid, isDemoMode]);
 
   // Sync knights changes to storage
   useEffect(() => {
@@ -151,18 +145,42 @@ export default function App() {
     }
   };
 
-  // Initiative handlers
-  const handleUpdateInitiative = useCallback((updated: Initiative) => {
+  // Runtime initiative writes go to Firestore whenever a real Firebase user
+  // is active. Demo mode remains local-only for previews.
+  const handleUpdateInitiative = useCallback(async (updated: Initiative) => {
     setInitiatives(prev => prev.map(item => item.id === updated.id ? updated : item));
-  }, []);
+    if (!isDemoMode && currentUser) {
+      try {
+        const saved = await saveInitiativeRecordRemote(updated);
+        setInitiatives(prev => prev.map(item => item.id === saved.id ? saved : item));
+      } catch (e) {
+        console.error('[App] Failed to persist initiative update:', e);
+      }
+    }
+  }, [currentUser?.uid, isDemoMode]);
 
-  const handleAddInitiative = useCallback((newInit: Initiative) => {
+  const handleAddInitiative = useCallback(async (newInit: Initiative) => {
     setInitiatives(prev => [newInit, ...prev]);
-  }, []);
+    if (!isDemoMode && currentUser) {
+      try {
+        const saved = await saveInitiativeRecordRemote(newInit);
+        setInitiatives(prev => [saved, ...prev.filter(item => item.id !== saved.id)]);
+      } catch (e) {
+        console.error('[App] Failed to persist new initiative:', e);
+      }
+    }
+  }, [currentUser?.uid, isDemoMode]);
 
-  const handleDeleteInitiative = useCallback((id: string) => {
+  const handleDeleteInitiative = useCallback(async (id: string) => {
     setInitiatives(prev => prev.filter(item => item.id !== id));
-  }, []);
+    if (!isDemoMode && currentUser) {
+      try {
+        await deleteInitiativeRecordRemote(id);
+      } catch (e) {
+        console.error('[App] Failed to persist initiative deletion:', e);
+      }
+    }
+  }, [currentUser?.uid, isDemoMode]);
 
   // Knight handlers
   const handleAddKnight = useCallback((k: Knight) => setKnights(prev => [k, ...prev]), []);
