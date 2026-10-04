@@ -202,6 +202,9 @@ export interface Initiative {
   dieselDisbursed?: string; // الديزل المنصرف من مساهمة وحدة التدخلات
   dieselRemaining?: string; // الديزل المتبقي من مساهمة وحدة التدخلات
   dieselUsed?: string; // الديزل المستهلك من مساهمة وحدة التدخلات
+  otherMaterialApproved?: number; // كمية مادة أخرى المعتمدة من مصفوفة الفرز
+  otherMaterialUnit?: string; // وحدة مادة أخرى
+  resourceSource?: 'مصفوفة الفرز' | string; // مصدر اعتماد كميات مساهمة المواد
   beneficiaries?: number; // عدد المستفيدين
   totalDistance?: number; // المسافة الكلية للمبادرة بالكم
   title?: string; // عنوان المبادرة
