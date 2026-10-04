@@ -93,7 +93,7 @@ export function validateInitiativeData(initiatives: Initiative[]): {
 }
 
 /**
- * Returns the Canonical 725 Initiatives Dataset.
+ * Returns the Canonical 784 Initiatives Dataset.
  * Prioritizes validated local cache if valid and matching canonical statuses.
  */
 export function getCanonicalInitiatives(): Initiative[] {
@@ -118,10 +118,10 @@ export function getCanonicalInitiatives(): Initiative[] {
 }
 
 /**
- * Persists updated initiatives to local storage cache only if it maintains or exceeds canonical count (725).
+ * Persists updated initiatives to local storage cache only if it maintains or exceeds canonical count (784).
  */
 export function persistCanonicalInitiatives(initiatives: Initiative[]): boolean {
-  if (!Array.isArray(initiatives) || initiatives.length < 725) {
+  if (!Array.isArray(initiatives) || initiatives.length < 784) {
     console.warn(
       `Refusing to persist truncated dataset (${initiatives?.length || 0} items). Canonical minimum is 784.`
     );
