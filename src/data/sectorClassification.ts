@@ -15,7 +15,7 @@ export const INITIATIVE_SECTOR_RANGES = [
 ] as const;
 
 const DUPLICATE_NAMES = new Set([
-  'جسر فاطمة الزهراء',
+  'جسر فاطمة الزهراء للمشاة',
   'استكمال رصف طريق السر',
 ]);
 
