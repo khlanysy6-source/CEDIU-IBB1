@@ -13,7 +13,7 @@ function normalizeResourceKey(value: unknown): string {
     .replace(/ى/g, 'ي')
     .replace(/ة/g, 'ه')
     .replace(/[\u064B-\u0652]/g, '')
-    .replace(/\\s+/g, ' ');
+    .replace(/\s+/g, ' ');
 }
 
 function resolveSortingResources(name: string, district: string, subDistrict: string) {
