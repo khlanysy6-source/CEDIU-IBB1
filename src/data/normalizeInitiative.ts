@@ -6,6 +6,7 @@
 import { Initiative } from '../types';
 import { getCanonicalDistrictName, parseNum } from '../utils/numberAndDistrictUtils';
 import { SORTING_APPROVED_RESOURCES_BY_KEY, SORTING_APPROVED_RESOURCES_BY_NAME } from './generated/sortingApprovedResources';
+import { resolveInitiativeSector } from './sectorClassification';
 
 function normalizeResourceKey(value: unknown): string {
   return String(value ?? '').trim().toLowerCase()
@@ -29,6 +30,7 @@ export function canonicalizeInitiativeRecord(init: any, index?: number): Initiat
   const id = init.id || `init_${String(index || 1).padStart(3, '0')}`;
   const initiativeNumber = init.initiativeNumber || (init as any).initiative_number || id;
   const name = String(init.name || '').trim();
+  const sector = resolveInitiativeSector(initiativeNumber, init.sector);
   const district = getCanonicalDistrictName(init.district || '');
   const subDistrict = String(init.subDistrict || init.sub_district || '').trim();
   const village = String(init.village || '').trim();
@@ -134,6 +136,7 @@ export function canonicalizeInitiativeRecord(init: any, index?: number): Initiat
     canonicalId: init.canonicalId || id,
     initiativeNumber,
     name,
+    sector,
     district,
     subDistrict,
     village,
