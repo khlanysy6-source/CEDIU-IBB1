@@ -296,8 +296,8 @@ export default function App() {
       </header>
 
       {/* Main Container */}
-      <div className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 flex-1 flex flex-col">
-        {/* Adaptive Navigation Component */}
+      <div className="platform-layout max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 flex-1">
+        {/* Right-side command navigation */}
         <AdaptiveNavigation
           userRole={effectiveRole}
           activeTab={activeTab}
@@ -310,7 +310,7 @@ export default function App() {
         />
 
         {/* Tab Routing View */}
-        <main className="flex-1 mt-2">
+        <main className="platform-content min-w-0">
           {/* 1. Home / Operations Room */}
           {activeTab === 'home' && (
             <ProtectedRoute tabId="home" onGoHome={() => handleNavigate('home')}>
