@@ -78,7 +78,18 @@ export async function loadInitiativesAsync(): Promise<Initiative[]> {
         const remote = snapshot.docs
           .filter(d => !(d.data() as { isArchived?: boolean }).isArchived)
           .map(d => ({ ...d.data(), id: d.id }));
-        return cacheInitiatives(remote);
+
+        // Never let an older/truncated Firestore seed hide the canonical
+        // Second Path dataset. The Excel matrix is the import source of truth
+        // for the current 784-record baseline. Remote records become
+        // authoritative only after Firestore has reached the same baseline.
+        if (remote.length >= 784) {
+          return cacheInitiatives(remote);
+        }
+
+        console.warn(
+          `[Repository] Firestore contains ${remote.length} records; canonical baseline is ${generatedInitiatives.length}. Using the current matrix-generated dataset until Firestore is re-seeded.`
+        );
       }
     } catch (e) {
       console.warn('[Repository] Firestore read failed; using local fallback:', e);
