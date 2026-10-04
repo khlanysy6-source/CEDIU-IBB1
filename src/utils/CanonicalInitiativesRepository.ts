@@ -7,6 +7,7 @@
 import { Initiative } from '../types';
 import { INITIAL_INITIATIVES } from '../data';
 import { safeLocalStorage } from './safeStorage';
+import { isExcludedDuplicateInitiative, resolveInitiativeSector } from '../data/sectorClassification';
 
 export interface DatasetMetadata {
   datasetVersion: string;
@@ -19,10 +20,10 @@ export interface DatasetMetadata {
 }
 
 export const CANONICAL_DATASET_METADATA: DatasetMetadata = {
-  datasetVersion: '4.0.0-canonical-725-final',
-  rowCount: 725,
-  uniqueCount: 725,
-  source: 'السجل المرجعي للمبادرات (725) — نسخة تشغيلية نهائية للمسار التنفيذي الثاني',
+  datasetVersion: '5.0.0-canonical-sector-classified-2026-10-05',
+  rowCount: 786,
+  uniqueCount: 784,
+  source: 'مصفوفة الفرز — تصنيف القطاعات المعتمد للمسار التنفيذي الثاني',
   generatedAt: '2026-09-26T12:00:00Z',
   checksum: 'sha256-ibb-initiatives-725-canonical-v4.0-final',
   schemaVersion: 'v2.1',
