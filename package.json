@@ -9,7 +9,7 @@
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",
     "lint": "npm run prepare:initiative-data && npm run prepare:sorting-resources && tsc --noEmit",
-    "validate:data": "node scripts/validate-initiatives.mjs",
+    "validate:data": "npm run prepare:initiative-data && node scripts/validate-initiatives.mjs",
     "test:verification": "tsx scripts/test-engine-verification.ts",
     "validate:forms": "node scripts/validate-form-templates.mjs",
     "validate:pathway": "node scripts/validate-second-path.mjs",
