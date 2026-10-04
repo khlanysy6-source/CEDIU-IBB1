@@ -131,6 +131,6 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
           {nearby.map(item => <button key={item.tab} onClick={() => go(item.tab)}>{item.label}<ArrowRight size={14}/></button>)}
         </div>
       )}
-    </section>
+    </aside>
   );
 }
