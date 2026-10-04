@@ -4,16 +4,17 @@
   "version": "1.1.0",
   "type": "module",
   "scripts": {
-    "dev": "npm run prepare:sorting-resources && tsx server.ts",
-    "build": "npm run prepare:sorting-resources && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "dev": "npm run prepare:initiative-data && npm run prepare:sorting-resources && tsx server.ts",
+    "build": "npm run prepare:initiative-data && npm run prepare:sorting-resources && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",
-    "lint": "npm run prepare:sorting-resources && tsc --noEmit",
+    "lint": "npm run prepare:initiative-data && npm run prepare:sorting-resources && tsc --noEmit",
     "validate:data": "node scripts/validate-initiatives.mjs",
     "test:verification": "tsx scripts/test-engine-verification.ts",
     "validate:forms": "node scripts/validate-form-templates.mjs",
     "validate:pathway": "node scripts/validate-second-path.mjs",
-    "prepare:sorting-resources": "tsx scripts/buildSortingResources.ts"
+    "prepare:sorting-resources": "tsx scripts/buildSortingResources.ts",
+    "prepare:initiative-data": "tsx scripts/buildInitiativesFromSorting.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
