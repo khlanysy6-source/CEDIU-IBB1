@@ -1,6 +1,6 @@
 /**
  * Canonical Initiatives Repository
- * Single Source of Truth for the 725 Verified Initiatives Architecture.
+ * Single Source of Truth for the currently loaded 725 verified initiatives. The approved 786-row target is not claimed until the missing source rows are actually imported.
  * Ensures consistent data flow across all components, decision engines, and persistence layers.
  */
 
@@ -21,8 +21,8 @@ export interface DatasetMetadata {
 
 export const CANONICAL_DATASET_METADATA: DatasetMetadata = {
   datasetVersion: '5.0.0-canonical-sector-classified-2026-10-05',
-  rowCount: 786,
-  uniqueCount: 784,
+  rowCount: 725,
+  uniqueCount: 725,
   source: 'مصفوفة الفرز — تصنيف القطاعات المعتمد للمسار التنفيذي الثاني',
   generatedAt: '2026-09-26T12:00:00Z',
   checksum: 'sha256-ibb-initiatives-725-canonical-v4.0-final',
