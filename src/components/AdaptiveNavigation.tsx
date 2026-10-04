@@ -86,7 +86,7 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
   };
 
   return (
-    <section className="adaptive-nav" aria-label="التنقل الذكي">
+    <aside className="adaptive-nav" aria-label="التنقل الذكي">
       <div className="adaptive-nav__context">
         <div className="adaptive-nav__current">
           <span className="adaptive-nav__current-icon"><Icon size={18} /></span>
