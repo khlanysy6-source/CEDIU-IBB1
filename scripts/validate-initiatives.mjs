@@ -1,5 +1,5 @@
 /**
- * Independent Validation Script for 725 Road Community Initiatives
+ * Independent Validation Script for 784 initiatives imported from مصفوفة الفرز
  * Runs as part of CI / Data Validation Pipeline: npm run validate:data
  */
 
@@ -38,7 +38,7 @@ const VALID_STATUSES = ['pending', 'ongoing', 'stagnant', 'completed', 'stopped'
 
 async function runValidation() {
   console.log('=====================================================');
-  console.log('🔍 تدقيق وفحص سلامة بيانات مبادرات الطرق بمحافظة إب');
+  console.log('🔍 تدقيق وفحص سلامة بيانات مبادرات المبادرات بمحافظة إب');
   console.log('=====================================================');
 
   const generatedFile = path.join(rootDir, 'src', 'data', 'generated', 'initiatives725.ts');
@@ -83,8 +83,8 @@ async function runValidation() {
   const seenNumbers = new Set();
   const districtCounts = {};
 
-  if (total !== 725) {
-    errors.push(`إجمالي عدد المبادرات (${total}) لا يطابق العدد المعتمد رسمياً (725 مبادرة).`);
+  if (total !== 784) {
+    errors.push(`إجمالي عدد المبادرات (${total}) لا يطابق العدد المعتمد رسمياً (784 مبادرة بعد استبعاد التكرارين).`);
   }
 
   dataset.forEach((item, idx) => {
@@ -171,7 +171,7 @@ async function runValidation() {
     process.exit(1);
   }
 
-  console.log('\n🎉 اكتمل الفحص بنجاح تام: كافة السجلات الـ 725 مطابقة للمعايير المؤسسية!');
+  console.log('\n🎉 اكتمل الفحص بنجاح تام: كافة السجلات الـ 784 مطابقة للمعايير المؤسسية!');
   process.exit(0);
 }
 
