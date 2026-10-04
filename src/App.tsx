@@ -205,7 +205,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-sm sm:text-base font-black tracking-tight text-white line-clamp-1">
-                  غرفة العمليات المركزية لمبادرات الطرق
+                  غرفة عمليات إب للتنمية والمبادرات
                 </h1>
                 <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   محافظة إب
@@ -603,7 +603,7 @@ export default function App() {
       {/* Footer */}
       <footer className="mt-auto bg-slate-900 border-t border-slate-800 text-slate-400 py-4 px-6 text-center text-xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>منصة المبادرات المجتمعية لمشاريع الطرق — محافظة إب © 2026</span>
+          <span>منصة إب لإدارة التنمية والمبادرات المجتمعية © 2026</span>
           <span className="text-slate-500 font-medium">
             إعداد: م. عيسى ناجي القادري | نموذج المسار التنفيذي الثاني المعتمد
           </span>
