@@ -11,10 +11,11 @@ import { safeLocalStorage, getFromIndexedDB, saveToIndexedDB } from '../utils/sa
 import { collection, getDocs, doc, setDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../utils/firebaseAuth';
 import { writeInitiativeMutation, archiveInitiative } from './initiativeHistory';
+import { isExcludedDuplicateInitiative } from './sectorClassification';
 
 const STORAGE_KEY = 'cooperative_initiatives_data';
 const VERSION_KEY = 'cooperative_initiatives_version';
-const CURRENT_DATA_VERSION = '2026.09.26.725.final';
+const CURRENT_DATA_VERSION = '2026.10.05.sector-classification-v1';
 const FIRESTORE_COLLECTION = 'cooperative_initiatives';
 const FIRESTORE_BOOTSTRAP_MARKER = 'cooperative_settings/firestore_bootstrap';
 
@@ -22,7 +23,9 @@ let inMemoryCache: Initiative[] | null = null;
 let bootstrapPromise: Promise<Initiative[]> | null = null;
 
 function canonicalizeList(items: any[]): Initiative[] {
-  return items.map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
+  return items
+    .filter(item => !isExcludedDuplicateInitiative(item?.name))
+    .map((item, idx) => canonicalizeInitiativeRecord(item, idx + 1));
 }
 
 function cacheInitiatives(list: Initiative[]): Initiative[] {
