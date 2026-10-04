@@ -82,7 +82,7 @@ const records = sourceRows
       sector: sectorFor(sortNumber),
       subDistrict: text(row[4]),
       village: text(row[5]),
-      coordinates: text(row[6]),
+      coordinates: [text(row[6]), text(row[7])].filter(Boolean).join(', '),
       startDate: '',
       endDate: '',
       cost: 0,
