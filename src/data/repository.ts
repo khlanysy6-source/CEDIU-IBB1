@@ -1,6 +1,6 @@
 /**
  * Data Repository Layer
- * Firestore is the authoritative source of initiative records.
+ * Firestore is the authoritative source of initiative records.\n * Local canonical fallback is generated from the master Excel sheet `مصفوفة الفرز` during prepare/build.
  * LocalStorage/IndexedDB remain a temporary offline/preview cache only.
  */
 
@@ -15,7 +15,7 @@ import { isExcludedDuplicateInitiative } from './sectorClassification';
 
 const STORAGE_KEY = 'cooperative_initiatives_data';
 const VERSION_KEY = 'cooperative_initiatives_version';
-const CURRENT_DATA_VERSION = '2026.10.05.sector-classification-v1';
+const CURRENT_DATA_VERSION = '2026.10.05.sorting-matrix-784-v1';
 const FIRESTORE_COLLECTION = 'cooperative_initiatives';
 const FIRESTORE_BOOTSTRAP_MARKER = 'cooperative_settings/firestore_bootstrap';
 
@@ -68,7 +68,7 @@ export function getInitialInitiatives(): Initiative[] {
 
 /**
  * Loads initiatives from Firestore first. If Firestore is unavailable or empty,
- * the canonical 725 dataset is used as a safe local fallback.
+ * the canonical 784 dataset generated from `مصفوفة الفرز` is used as a safe local fallback.
  */
 export async function loadInitiativesAsync(): Promise<Initiative[]> {
   if (db) {
@@ -102,7 +102,7 @@ export async function loadInitiativesAsync(): Promise<Initiative[]> {
 }
 
 /**
- * Seeds Firestore once from the canonical 725 dataset when explicitly called
+ * Seeds Firestore once from the canonical 784 dataset when explicitly called
  * by an authenticated central administrator. Existing Firestore data is never
  * overwritten by this bootstrap.
  */
