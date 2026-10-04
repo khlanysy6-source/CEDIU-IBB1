@@ -51,6 +51,8 @@ const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: true, 
 const sourceRows = rows
   .map(row => row)
   .filter(row => {
+    // In مصفوفة الفرز the official initiative sequence is column A.
+    // Column B is the initiative name and column CV (index 99) is the code.
     const sortNumber = Number(row[0]);
     return Number.isInteger(sortNumber) && sortNumber >= 1 && sortNumber <= 786 && text(row[1]);
   });
