@@ -163,7 +163,7 @@ export default function App() {
     setInitiatives(prev => [newInit, ...prev]);
     if (!isDemoMode && currentUser) {
       try {
-        const saved = await saveInitiativeRecordRemote(newInit);
+        const saved = await saveInitiativeRecordRemote(newInit, 'create');
         setInitiatives(prev => [saved, ...prev.filter(item => item.id !== saved.id)]);
       } catch (e) {
         console.error('[App] Failed to persist new initiative:', e);

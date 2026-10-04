@@ -8,8 +8,9 @@ import { Initiative } from '../types';
 import { generatedInitiatives } from './generated/initiatives725';
 import { canonicalizeInitiativeRecord } from './normalizeInitiative';
 import { safeLocalStorage, getFromIndexedDB, saveToIndexedDB } from '../utils/safeStorage';
-import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, writeBatch, getDoc } from 'firebase/firestore';
 import { db } from '../utils/firebaseAuth';
+import { writeInitiativeMutation, archiveInitiative } from './initiativeHistory';
 
 const STORAGE_KEY = 'cooperative_initiatives_data';
 const VERSION_KEY = 'cooperative_initiatives_version';
@@ -71,7 +72,9 @@ export async function loadInitiativesAsync(): Promise<Initiative[]> {
     try {
       const snapshot = await getDocs(collection(db, FIRESTORE_COLLECTION));
       if (!snapshot.empty) {
-        const remote = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+        const remote = snapshot.docs
+          .filter(d => !(d.data() as { isArchived?: boolean }).isArchived)
+          .map(d => ({ ...d.data(), id: d.id }));
         return cacheInitiatives(remote);
       }
     } catch (e) {
@@ -145,22 +148,22 @@ export async function bootstrapFirestoreFromCanonicalDataset(): Promise<Initiati
 }
 
 /** Saves a single initiative to Firestore and refreshes the local cache. */
-export async function saveInitiativeRecordRemote(record: Initiative): Promise<Initiative> {
+export async function saveInitiativeRecordRemote(record: Initiative, kind: 'create' | 'update' = 'update'): Promise<Initiative> {
   if (!db) throw new Error('Firestore is not initialized.');
   const canonical = canonicalizeInitiativeRecord(record);
   const initiativeId = String(canonical.id || canonical.initiativeNumber);
-  await setDoc(doc(db, FIRESTORE_COLLECTION, initiativeId), canonical, { merge: true });
+  await writeInitiativeMutation(canonical, kind);
   cacheInitiatives([
-    ...(getCachedInitiatives().filter(i => i.id !== canonical.id && i. initiativeNumber !== canonical.initiativeNumber)),
+    ...(getCachedInitiatives().filter(i => i.id !== canonical.id && i.initiativeNumber !== canonical.initiativeNumber)),
     canonical
   ]);
   return canonical;
 }
 
-/** Deletes an initiative from Firestore and refreshes the local cache. */
+/** Archives an initiative instead of physically deleting it; history remains recoverable. */
 export async function deleteInitiativeRecordRemote(id: string): Promise<void> {
   if (!db) throw new Error('Firestore is not initialized.');
-  await deleteDoc(doc(db, FIRESTORE_COLLECTION, id));
+  await archiveInitiative(id);
   cacheInitiatives(getCachedInitiatives().filter(i => i.id !== id));
 }
 
