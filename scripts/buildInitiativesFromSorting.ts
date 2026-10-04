@@ -55,6 +55,11 @@ const sourceRows = rows
     return Number.isInteger(sortNumber) && sortNumber >= 1 && sortNumber <= 786 && text(row[1]);
   });
 
+const missingCodeRows = sourceRows.filter(row => { const rawCode = text(row[99]);
+    const code = (rawCode === '' || rawCode === '0') ? (temporaryNumberByRow.get(row) || '') : rawCode; return code === '' || code === '0'; });
+if (missingCodeRows.length !== 14) throw new Error(`Expected 14 initiatives without a valid code; got ${missingCodeRows.length}.`);
+const temporaryNumberByRow = new Map(missingCodeRows.map((row, index) => [row, String(index + 1)]));
+
 const records = sourceRows
   .map(row => ({ sortNumber: Number(row[0]), name: text(row[1]), row }))
   .filter(({ sortNumber, name }) => !(sortNumber > 726 && DUPLICATE_AFTER_726.has(name)))
