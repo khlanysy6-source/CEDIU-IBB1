@@ -1,6 +1,6 @@
 /**
  * Canonical Initiatives Repository
- * Single Source of Truth for the currently loaded 725 verified initiatives. The approved 786-row target is not claimed until the missing source rows are actually imported.
+ * Single Source of Truth for the 784 verified initiatives imported from `مصفوفة الفرز` after excluding the two post-726 duplicate rows.
  * Ensures consistent data flow across all components, decision engines, and persistence layers.
  */
 
@@ -20,12 +20,12 @@ export interface DatasetMetadata {
 }
 
 export const CANONICAL_DATASET_METADATA: DatasetMetadata = {
-  datasetVersion: '5.0.0-canonical-sector-classified-2026-10-05',
-  rowCount: 725,
-  uniqueCount: 725,
+  datasetVersion: '6.0.0-sorting-matrix-784-2026-10-05',
+  rowCount: 784,
+  uniqueCount: 784,
   source: 'مصفوفة الفرز — تصنيف القطاعات المعتمد للمسار التنفيذي الثاني',
   generatedAt: '2026-09-26T12:00:00Z',
-  checksum: 'sha256-ibb-initiatives-725-canonical-v4.0-final',
+  checksum: 'sha256-ibb-sorting-matrix-784-canonical-v5.0',
   schemaVersion: 'v2.1',
 };
 
@@ -84,7 +84,7 @@ export function validateInitiativeData(initiatives: Initiative[]): {
   });
 
   return {
-    isValid: invalidRecordsCount === 0 && initiatives.length >= 725,
+    isValid: invalidRecordsCount === 0 && initiatives.length >= 784,
     totalCount: initiatives.length,
     uniqueCount: seenIds.size,
     invalidRecordsCount,
@@ -101,7 +101,7 @@ export function getCanonicalInitiatives(): Initiative[] {
     const cachedRaw = safeLocalStorage.getItem(STORAGE_KEYS.CANONICAL_CACHE);
     if (cachedRaw) {
       const parsed = JSON.parse(cachedRaw);
-      if (Array.isArray(parsed) && parsed.length >= 725) {
+      if (Array.isArray(parsed) && parsed.length >= 784) {
         // Ensure cache is not stale with unclassified status
         const completedInCache = parsed.filter((i: any) => i.status === 'completed').length;
         if (completedInCache > 0) {
@@ -123,7 +123,7 @@ export function getCanonicalInitiatives(): Initiative[] {
 export function persistCanonicalInitiatives(initiatives: Initiative[]): boolean {
   if (!Array.isArray(initiatives) || initiatives.length < 725) {
     console.warn(
-      `Refusing to persist truncated dataset (${initiatives?.length || 0} items). Canonical minimum is 725.`
+      `Refusing to persist truncated dataset (${initiatives?.length || 0} items). Canonical minimum is 784.`
     );
     return false;
   }
@@ -164,7 +164,7 @@ export function sanitizeLocalCaches(): void {
       if (item) {
         const parsed = JSON.parse(item);
         const completedInCache = Array.isArray(parsed) ? parsed.filter((i: any) => i.status === 'completed').length : 0;
-        if (!Array.isArray(parsed) || parsed.length < 725 || completedInCache === 0) {
+        if (!Array.isArray(parsed) || parsed.length < 784 || completedInCache === 0) {
           console.log(`[Cache Sanitization] Removing stale or unclassified cache key '${key}'.`);
           safeLocalStorage.removeItem(key);
         }
