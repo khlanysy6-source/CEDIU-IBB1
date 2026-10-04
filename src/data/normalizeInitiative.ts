@@ -5,6 +5,21 @@
 
 import { Initiative } from '../types';
 import { getCanonicalDistrictName, parseNum } from '../utils/numberAndDistrictUtils';
+import { SORTING_APPROVED_RESOURCES_BY_KEY, SORTING_APPROVED_RESOURCES_BY_NAME } from './generated/sortingApprovedResources';
+
+function normalizeResourceKey(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase()
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[\u064B-\u0652]/g, '')
+    .replace(/\\s+/g, ' ');
+}
+
+function resolveSortingResources(name: string, district: string, subDistrict: string) {
+  const key = [normalizeResourceKey(name), normalizeResourceKey(district), normalizeResourceKey(subDistrict)].join('|');
+  return SORTING_APPROVED_RESOURCES_BY_KEY[key] || SORTING_APPROVED_RESOURCES_BY_NAME[normalizeResourceKey(name)];
+}
 
 export function canonicalizeInitiativeRecord(init: any, index?: number): Initiative {
   if (!init) {
@@ -95,6 +110,24 @@ export function canonicalizeInitiativeRecord(init: any, index?: number): Initiat
     stagnationReason = undefined;
   }
 
+  const sortingResources = resolveSortingResources(name, district, subDistrict);
+  const baseMaterials = Array.isArray(init.materials) ? init.materials : [];
+  const materials = sortingResources ? [
+    ...baseMaterials.filter((m: any) => !['الاسمنت', 'الديزل', 'أخرى'].some(label => String(m?.name || '').includes(label))),
+    {
+      id: `${id}_cement`, name: 'الاسمنت', quantity: sortingResources.cementApproved, unit: 'كيس',
+      status: 'safe', storageLocation: 'غير محدد', updatedAt: init.updatedAt || new Date().toISOString()
+    },
+    {
+      id: `${id}_diesel`, name: 'الديزل', quantity: sortingResources.dieselApproved, unit: 'لتر',
+      status: 'safe', storageLocation: 'غير محدد', updatedAt: init.updatedAt || new Date().toISOString()
+    },
+    {
+      id: `${id}_other`, name: 'أخرى', quantity: sortingResources.otherApproved, unit: sortingResources.otherUnit || '—',
+      status: 'safe', storageLocation: 'غير محدد', updatedAt: init.updatedAt || new Date().toISOString()
+    }
+  ] : baseMaterials;
+
   return {
     ...init,
     id,
@@ -109,6 +142,12 @@ export function canonicalizeInitiativeRecord(init: any, index?: number): Initiat
     cost: cost || 0,
     communityContribution: parseNum(init.communityContribution) || 0,
     unitContribution: parseNum(init.unitContribution) || 0,
+    materials,
+    materialsApproved: sortingResources ? `${sortingResources.cementApproved} كيس` : init.materialsApproved,
+    dieselApproved: sortingResources ? `${sortingResources.dieselApproved} لتر` : init.dieselApproved,
+    otherMaterialApproved: sortingResources?.otherApproved ?? init.otherMaterialApproved,
+    otherMaterialUnit: sortingResources?.otherUnit || init.otherMaterialUnit,
+    resourceSource: sortingResources ? 'مصفوفة الفرز' : init.resourceSource,
     stagnationReason
   };
 }
