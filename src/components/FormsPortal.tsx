@@ -5,13 +5,14 @@ import {FORM_REGISTRY, FORM_LIFECYCLE, FormDef, getRecommendedFormIds} from '../
 import {resolveFormData} from '../forms/formDataResolver';
 import formSourceIndex from '../data/formSourceIndex.json';
 
-type Props={initiatives:Initiative[]; selectedInitiativeId?:string|null; userRole:UserRole; onSelectInitiative:(id:string)=>void; onNavigateTab:(tab:any)=>void};
+type Props={initiatives:Initiative[]; selectedInitiativeId?:string|null; initialFormId?:string; userRole:UserRole; onSelectInitiative:(id:string)=>void; onNavigateTab:(tab:any)=>void};
 const statusLabel:any={completed:'منجزة',ongoing:'قيد التنفيذ',stagnant:'متعثرة',stopped:'متوقفة',pending:'تحت الدراسة'};
 const clean=(s:string)=>s.replace(/[\\/:*?"<>|]/g,'_');
 
-export default function FormsPortal({initiatives,selectedInitiativeId,userRole,onSelectInitiative,onNavigateTab}:Props){
+export default function FormsPortal({initiatives,selectedInitiativeId,initialFormId,userRole,onSelectInitiative,onNavigateTab}:Props){
  const allowed=useMemo(()=>FORM_REGISTRY.filter(f=>f.roles.includes(String(userRole))||userRole==='admin'),[userRole]);
- const [formId,setFormId]=useState(allowed[0]?.id||'diagnosis');
+ const [formId,setFormId]=useState(initialFormId||allowed[0]?.id||'diagnosis');
+ React.useEffect(()=>{ if(initialFormId && allowed.some(f=>f.id===initialFormId)) setFormId(initialFormId); },[initialFormId,allowed]);
  const [query,setQuery]=useState('');
  const [initiativeId,setInitiativeId]=useState(selectedInitiativeId||initiatives[0]?.id||'');
  const [busy,setBusy]=useState(false); const [message,setMessage]=useState('');
