@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ShieldCheck, Activity, ArrowRight, BarChart3, Brain, Building2, Compass, FileText, HelpCircle, Home, Map as MapIcon, MoreHorizontal, Plus, Search, Settings, Users, X } from 'lucide-react';
 import { TabId, hasTabAccess } from '../permissions';
-import { OPERATING_FLOW, ADMIN_PORTALS, PORTAL_GROUPS } from '../navigation/operatingModel';
+import { OPERATING_FLOW, ADMIN_PORTALS, PORTAL_GROUPS, SECOND_PATH_STAGES, getPreviousFlowStage, getNextFlowStage } from '../navigation/operatingModel';
 import { UserRole } from '../types';
 
 interface Props {
   userRole: UserRole;
   activeTab: TabId;
+  workflowStage?: string | null;
+  selectedInitiative?: any;
   initiativesCount: number;
   roleConfig: Record<string, TabId[]>;
   onNavigate: (tab: TabId) => void;
@@ -42,7 +44,7 @@ const ITEMS: Record<TabId, NavItem> = {
 
 const FLOW: NavItem[] = OPERATING_FLOW.map(item => ({ ...ITEMS[item.tab], description: item.purpose }));
 
-export default function AdaptiveNavigation({ userRole, activeTab, initiativesCount, roleConfig, onNavigate, onOpenSettings, onOpenGuide, onOpenSearch }: Props) {
+export default function AdaptiveNavigation({ userRole, activeTab, workflowStage, selectedInitiative, initiativesCount, roleConfig, onNavigate, onOpenSettings, onOpenGuide, onOpenSearch }: Props) {
   const allowed = useMemo(() => new Set((Object.keys(ITEMS) as TabId[]).filter(tab => hasTabAccess(userRole, tab, roleConfig))), [userRole, roleConfig]);
   const primary = useMemo(() => {
     const roleTabs = (roleConfig[String(userRole)] || []) as TabId[];
@@ -53,11 +55,9 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
     return [...unique.values()].slice(0, 5);
   }, [userRole, roleConfig, allowed]);
 
-  const nearby = useMemo(() => {
-    const idx = FLOW.findIndex(x => x.tab === activeTab);
-    const candidates = idx >= 0 ? [...FLOW.slice(Math.max(0, idx - 1), idx), ...FLOW.slice(idx + 1, idx + 3)] : FLOW;
-    return candidates.filter(x => allowed.has(x.tab)).slice(0, 2);
-  }, [activeTab, allowed]);
+  const currentStage = useMemo(() => SECOND_PATH_STAGES.find(s => s.id === workflowStage) || SECOND_PATH_STAGES.find(s => s.tab === activeTab), [workflowStage, activeTab]);
+  const previousStage = useMemo(() => getPreviousFlowStage(currentStage?.id, allowed), [currentStage, allowed]);
+  const nextStage = useMemo(() => getNextFlowStage(currentStage?.id, allowed), [currentStage, allowed]);
 
   const go = (tab: TabId) => { if (allowed.has(tab)) onNavigate(tab); };
   const Icon = ITEMS[activeTab]?.icon || Compass;
@@ -88,6 +88,9 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
   return (
     <aside className="adaptive-nav" aria-label="التنقل الذكي">
       <div className="adaptive-nav__context">
+        {selectedInitiative && <div className="adaptive-nav__initiative">
+          <span>المبادرة الحالية</span><b>{selectedInitiative.initiativeNumber || '—'} — {selectedInitiative.name}</b>
+        </div>}
         <div className="adaptive-nav__current">
           <span className="adaptive-nav__current-icon"><Icon size={18} /></span>
           <div className="min-w-0">
@@ -125,10 +128,15 @@ export default function AdaptiveNavigation({ userRole, activeTab, initiativesCou
         </div>
       </div>
 
-      {nearby.length > 0 && activeTab !== 'home' && (
-        <div className="adaptive-nav__next" aria-label="خطوات مقترحة">
-          <span>الخطوة التالية المقترحة:</span>
-          {nearby.map(item => <button key={item.tab} onClick={() => go(item.tab)}>{item.label}<ArrowRight size={14}/></button>)}
+      {currentStage && activeTab !== 'home' && (
+        <div className="adaptive-nav__workflow" aria-label="مسار العمل">
+          <div className="adaptive-nav__workflowHead"><span>مسار العمل</span><b>{currentStage.order} / {SECOND_PATH_STAGES.length}</b></div>
+          <div className="adaptive-nav__workflowTitle">{currentStage.title}</div>
+          <div className="adaptive-nav__workflowTrack" aria-hidden="true">{SECOND_PATH_STAGES.map(stage => <span key={stage.id} className={stage.order <= currentStage.order ? 'is-done' : ''}></span>)}</div>
+          <div className="adaptive-nav__workflowActions">
+            {previousStage && <button onClick={() => go(previousStage.tab)} title={`السابق: ${previousStage.title}`}>السابق: {previousStage.shortTitle}</button>}
+            {nextStage && <button onClick={() => onNavigate(nextStage.tab, nextStage.id)} title={`التالي: ${nextStage.title}`}>التالي: {nextStage.shortTitle}<ArrowRight size={14}/></button>}
+          </div>
         </div>
       )}
     </aside>
