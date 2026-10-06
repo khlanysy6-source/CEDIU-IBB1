@@ -306,6 +306,8 @@ export default function App() {
         <AdaptiveNavigation
           userRole={effectiveRole}
           activeTab={activeTab}
+          workflowStage={workflowStage}
+          selectedInitiative={selectedInitiative}
           initiativesCount={initiatives.length}
           roleConfig={roleConfig}
           onNavigate={handleNavigate}
