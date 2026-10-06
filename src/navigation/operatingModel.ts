@@ -20,14 +20,14 @@ export type SecondPathStage = {
 };
 
 export const SECOND_PATH_STAGES: SecondPathStage[] = [
-  { id:'registry', order:1, title:'سجل المبادرات', shortTitle:'السجل', sourceSheets:['السجل المرجعي للمبادرات (725 مبادرة)'], tab:'initiatives', output:'ملف المبادرة الموحد', description:'الهوية المرجعية للمبادرة وجميع مفاتيح الربط.' },
-  { id:'study', order:2, title:'الدراسات والاعتمادات', shortTitle:'الدراسات', sourceSheets:['الدراسات'], tab:'matrix', output:'الأعمال والكميات المعتمدة', description:'ما هو معتمد فنيًا وماليًا قبل مقارنة التنفيذ.' },
-  { id:'materials', order:3, title:'سجل الشطب والتوريدات', shortTitle:'المواد', sourceSheets:['مصفوفة سجل الشطب(ديزل)'], tab:'matrix', output:'حركة الأسمنت والديزل وأوامر الصرف والأرصدة', description:'ما تم توريده وصرفه فعليًا، مع الاحتفاظ بكل دفعة.' },
-  { id:'evaluation', order:4, title:'مستوى الإنجاز والتقييم', shortTitle:'التقييم', sourceSheets:['مصفوفة مستوى الانجاز والتقييم'], tab:'matching_results', output:'موقف تنفيذي موثق ومؤشرات تقييم', description:'مقارنة الاعتماد بالإنجاز والمواد والمساهمة.' },
-  { id:'sorting', order:5, title:'الفرز', shortTitle:'الفرز', sourceSheets:['مصفوفة الفرز'], tab:'matching_results', output:'تصنيف المبادرة والمسار الإجرائي التالي', description:'بوابة تحديد ما إذا كانت المبادرة تحتاج تشخيصًا أو جاهزية أو قرارًا.' },
-  { id:'forms', order:6, title:'المخرجات التنفيذية', shortTitle:'النماذج', sourceSheets:['استمارة التشخيص','استمارة فحص الجاهزية','استمارة تقرير الانجاز النهائي','محضر مناقلة واستلام','إخطار وإشعار اللجنة المجتمعية'], tab:'forms_portal', output:'تشخيص → جاهزية → قرار/إجراء → إنجاز → استلام', description:'النماذج الأصلية كمخرجات للعملية وليست جزرًا مستقلة.' },
-  { id:'execution', order:7, title:'التنفيذ والمتابعة', shortTitle:'المتابعة', sourceSheets:['التقرير اليومي للممثل والشركاء','التقرير اليومي للممثل والمنسق','الاحتياج والدعم اللوجستي الفوري','مصفوفة المخاطر'], tab:'field_staging', output:'أدلة ميدانية واحتياجات وإجراءات متابعة', description:'تنفيذ القرار، توثيق الميدان، المخاطر والاحتياج.' },
-  { id:'closure', order:8, title:'الإغلاق والأثر', shortTitle:'الإغلاق', sourceSheets:['مصفوفة الارشيف والوثائق','التقرير التجميعي الاسبوعي للمنس'], tab:'periodic_reports', output:'أرشيف وتقارير وأثر تنموي', description:'إغلاق المعاملة وتغذية التحليل الاستراتيجي.' },
+  { id:'registry', order:1, title:'سجل المبادرات', shortTitle:'السجل', sourceSheets:['السجل المرجعي للمبادرات (784 مبادرة)'], tab:'initiatives', output:'ملف المبادرة الموحد', description:'تبدأ الحركة من هوية المبادرة وسجلها المرجعي، ومنها ننتقل إلى الإجراء المناسب.' },
+  { id:'sorting', order:2, title:'الفرز والتصنيف', shortTitle:'الفرز', sourceSheets:['مصفوفة الفرز'], tab:'matching_results', output:'تصنيف المبادرة وتحديد الخطوة التالية', description:'تحديد القطاع والحالة والتوصيف ومسار المعالجة دون فتح شاشات غير مرتبطة.' },
+  { id:'diagnosis', order:3, title:'التشخيص', shortTitle:'التشخيص', sourceSheets:['استمارة التشخيص','مصفوفة الفرز'], tab:'forms_portal', output:'تشخيص موثق وأسباب الحالة والاحتياج', description:'فهم الحالة ميدانيًا وتوثيق أسباب التعثر أو التوقف قبل اتخاذ الإجراء.' },
+  { id:'readiness', order:4, title:'فحص الجاهزية', shortTitle:'الجاهزية', sourceSheets:['استمارة فحص الجاهزية','مصفوفة الفرز'], tab:'forms_portal', output:'قرار الجاهزية للاستئناف أو التدخل', description:'التحقق من المتطلبات التي يجب أن تسبق توريد المواد أو استئناف العمل.' },
+  { id:'evaluation', order:5, title:'الإنجاز والتقييم', shortTitle:'الإنجاز', sourceSheets:['مصفوفة مستوى الانجاز والتقييم','مصفوفة الفرز'], tab:'matching_results', output:'موقف تنفيذي موثق ونسبة إنجاز قابلة للمقارنة', description:'مقارنة الأعمال والكميات المعتمدة بما تحقق فعليًا، مع إبقاء مصدر كل قيمة واضحًا.' },
+  { id:'decision', order:6, title:'القرار والتوصية', shortTitle:'القرار', sourceSheets:['استمارة التشخيص','إخطار وإشعار اللجنة المجتمعية'], tab:'decision_center', output:'قرار أو توصية وإجراء مسؤول عنه', description:'تحويل التشخيص والتقييم إلى قرار واضح، مسؤول، وموعد متابعة.' },
+  { id:'execution', order:7, title:'التنفيذ والمتابعة', shortTitle:'المتابعة', sourceSheets:['التقرير اليومي للممثل والشركاء','التقرير اليومي للممثل والمنسق','الاحتياج والدعم اللوجستي الفوري'], tab:'field_staging', output:'أدلة ميدانية وإجراءات ومتابعة حتى الإغلاق', description:'تنفيذ القرار وتوثيق العمل والمواد والمخاطر والإجراءات التصحيحية.' },
+  { id:'closure', order:8, title:'الإغلاق والأثر', shortTitle:'الإغلاق', sourceSheets:['استمارة تقرير الانجاز النهائي','محضر مناقلة واستلام','مصفوفة الارشيف والوثائق'], tab:'forms_portal', output:'إنجاز واستلام وأرشيف وأثر تنموي', description:'إقفال المعاملة بعد اكتمال الأدلة، ثم حفظها لتغذية التقارير والتحليل.' },
 ];
 
 export const OPERATING_FLOW: PortalItem[] = SECOND_PATH_STAGES.map(stage => ({
@@ -69,8 +69,19 @@ export function getStageForTab(tab: TabId): SecondPathStage | undefined {
   return SECOND_PATH_STAGES.find(stage => stage.tab === tab);
 }
 
+export function getNextFlowStage(stageId: string | undefined, allowed: Set<TabId>): SecondPathStage | null {
+  const current = SECOND_PATH_STAGES.find(stage => stage.id === stageId);
+  const start = current?.order ?? 0;
+  return SECOND_PATH_STAGES.find(stage => stage.order > start && allowed.has(stage.tab)) ?? null;
+}
+
+export function getPreviousFlowStage(stageId: string | undefined, allowed: Set<TabId>): SecondPathStage | null {
+  const current = SECOND_PATH_STAGES.find(stage => stage.id === stageId);
+  const start = current?.order ?? Number.MAX_SAFE_INTEGER;
+  return [...SECOND_PATH_STAGES].reverse().find(stage => stage.order < start && allowed.has(stage.tab)) ?? null;
+}
+
 export function getNextFlowTab(current: TabId, allowed: Set<TabId>): TabId | null {
   const currentStage = getStageForTab(current);
-  const start = currentStage ? currentStage.order : 0;
-  return SECOND_PATH_STAGES.find(stage => stage.order > start && allowed.has(stage.tab))?.tab ?? null;
+  return getNextFlowStage(currentStage?.id, allowed)?.tab ?? null;
 }

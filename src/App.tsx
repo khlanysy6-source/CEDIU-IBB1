@@ -12,6 +12,7 @@ import {
 
 import { Initiative, UserRole, Knight } from './types';
 import { TabId, ROLE_TAB_ACCESS, TAB_LABELS } from './permissions';
+import { SECOND_PATH_STAGES } from './navigation/operatingModel';
 import { useAuth } from './security/AuthContext';
 import { getInitialInitiatives, loadInitiativesAsync, saveInitiativeRecordRemote, deleteInitiativeRecordRemote } from './data/repository';
 import { safeLocalStorage } from './utils/safeStorage';
@@ -58,6 +59,7 @@ export default function App() {
   // Primary Initiatives State
   const [initiatives, setInitiatives] = useState<Initiative[]>(() => getInitialInitiatives());
   const [activeTab, setActiveTab] = useState<TabId>('home');
+  const [workflowStage, setWorkflowStage] = useState<string | null>(null);
   const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
 
@@ -118,9 +120,11 @@ export default function App() {
   // Handle URL hash changes for deep linking
   useEffect(() => {
     const handleHash = () => {
-      const hash = window.location.hash.replace('#', '') as TabId;
-      if (hash && (Object.keys(TAB_LABELS) as TabId[]).includes(hash)) {
-        setActiveTab(hash);
+      const raw = window.location.hash.replace('#', '');
+      const [tab, stage] = raw.split(':');
+      if (tab && (Object.keys(TAB_LABELS) as TabId[]).includes(tab)) {
+        setActiveTab(tab);
+        setWorkflowStage(stage && SECOND_PATH_STAGES.some(s => s.id === stage) ? stage : null);
       }
     };
     handleHash();
@@ -129,9 +133,10 @@ export default function App() {
   }, []);
 
   // Update hash when activeTab changes
-  const handleNavigate = useCallback((tab: TabId) => {
+  const handleNavigate = useCallback((tab: TabId, stage?: string) => {
     setActiveTab(tab);
-    window.location.hash = `#${tab}`;
+    setWorkflowStage(stage || null);
+    window.location.hash = stage ? `#${tab}:${stage}` : `#${tab}`;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -366,6 +371,7 @@ export default function App() {
               <FormsPortal
                 initiatives={initiatives}
                 selectedInitiativeId={selectedInitiativeId}
+                initialFormId={workflowStage === 'diagnosis' ? 'diagnosis' : workflowStage === 'readiness' ? 'readiness' : workflowStage === 'decision' ? 'decision' : workflowStage === 'execution' ? 'daily' : workflowStage === 'closure' ? 'completion' : undefined}
                 userRole={effectiveRole}
                 onSelectInitiative={(id) => setSelectedInitiativeId(id)}
                 onNavigateTab={(tab) => handleNavigate(tab as TabId)}
