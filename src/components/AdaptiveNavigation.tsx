@@ -11,7 +11,7 @@ interface Props {
   selectedInitiative?: any;
   initiativesCount: number;
   roleConfig: Record<string, TabId[]>;
-  onNavigate: (tab: TabId) => void;
+  onNavigate: (tab: TabId, stage?: string) => void;
   onOpenSettings: () => void;
   onOpenGuide?: () => void;
   onOpenSearch?: () => void;
@@ -134,7 +134,7 @@ export default function AdaptiveNavigation({ userRole, activeTab, workflowStage,
           <div className="adaptive-nav__workflowTitle">{currentStage.title}</div>
           <div className="adaptive-nav__workflowTrack" aria-hidden="true">{SECOND_PATH_STAGES.map(stage => <span key={stage.id} className={stage.order <= currentStage.order ? 'is-done' : ''}></span>)}</div>
           <div className="adaptive-nav__workflowActions">
-            {previousStage && <button onClick={() => go(previousStage.tab)} title={`السابق: ${previousStage.title}`}>السابق: {previousStage.shortTitle}</button>}
+            {previousStage && <button onClick={() => onNavigate(previousStage.tab, previousStage.id)} title={`السابق: ${previousStage.title}`}>السابق: {previousStage.shortTitle}</button>}
             {nextStage && <button onClick={() => onNavigate(nextStage.tab, nextStage.id)} title={`التالي: ${nextStage.title}`}>التالي: {nextStage.shortTitle}<ArrowRight size={14}/></button>}
           </div>
         </div>
